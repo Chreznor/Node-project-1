@@ -30,9 +30,21 @@ const storeSchema = new mongoose.Schema({
     address: {
       type: String,
       required: 'You must supply and address!'
-    } 
+    }
   },
-  photo: String
+  photo: String,
+  author: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'User',
+    required: 'You must supply an author'
+  }
+});
+
+// Here we define our indexes
+
+storeSchema.index({
+  name: 'text',
+  description: 'text'
 });
 
 storeSchema.pre('save', async function(next) {
@@ -42,14 +54,13 @@ storeSchema.pre('save', async function(next) {
   }
   this.slug = slug(this.name);
   // find other stores that have the same slug
-  const slugRegEx = new RegExp(`^(${this.slug})((-[0-9]*$)?)$`, 'i') 
+  const slugRegEx = new RegExp(`^(${this.slug})((-[0-9]*$)?)$`, 'i')
   const storesWithSlug = await this.constructor.find({ slug: slugRegEx});
   if(storesWithSlug.length) {
     this.slug = `${this.slug}-${storesWithSlug.length + 1}`;
   }
 
   next();
-  //TODO make more resiliant so slugs are unique
 });
 
 storeSchema.statics.getTagsList = function() {
