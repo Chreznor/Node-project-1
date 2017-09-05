@@ -1,0 +1,12 @@
+extends layout
+
+include mixins/_storeCard
+
+block content
+	.inner
+		h2= title
+		if user
+		.stores
+			pre= h.dump(user)
+			each store in stores
+				+storeCard(store)
