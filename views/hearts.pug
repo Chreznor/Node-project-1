@@ -7,6 +7,7 @@ block content
 		h2= title
 		if user
 		.stores
-			pre= h.dump(user)
-			each store in stores
+			-const heartStrings = user.hearts.map(obj => obj.toString())
+			-const hearted = stores.filter(store => { return heartStrings.includes(store._id.toString()) }) 
+			each store in hearted
 				+storeCard(store)

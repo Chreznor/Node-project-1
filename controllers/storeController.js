@@ -148,7 +148,7 @@ exports.heartStore = async (req, res) => {
   const hearts = req.user.hearts.map(obj => obj.toString());
   // the operator that is responsible for finding and updating a user needs to be a variable
   const operator = hearts.includes(req.params.id) ? '$pull' : '$addToSet';
-  const user = await User.findByIdAndUpdate(req.user._id, 
+  const user = await User.findByIdAndUpdate(req.user._id,
                     {[operator]: {hearts: req.params.id}},
                     { new: true}
   );
@@ -156,8 +156,10 @@ exports.heartStore = async (req, res) => {
 };
 
 exports.heartsPage = async (req, res) => {
-  const stores = await Store.find({});
-  res.render('hearts', {title: 'Hearts', stores: stores});
+  const stores = await Store.find({
+    _id: { $in: req.user.hearts}
+  });
+  res.render('stores', {title: 'Hearts', stores: stores});
   // res.render('hearts', {title: 'Hearts'});
 }
 
