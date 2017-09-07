@@ -78,6 +78,23 @@ storeSchema.statics.getTagsList = function() {
   ]);
 };
 
+storeSchema.statics.getTopStores = function() {
+  return this.aggregate([
+      //Lookup stores and populate their reviews. For some reason mongoDB changes the Review model's name to lowercase "'r'eview + s"
+      { $lookup: {from: 'reviews', localField: '_id', foreignField: 'store', as: 'reviews'}},
+      //filter for only items that have 2 or more reviews. In mongo.DB, indexes are chosen with '.i' (reviews.1). One can use them to filter limit by looking up whether a specific amount/an item at a certain index exists (with $exists: true)
+      { $match: {'reviews.1': { $exists: true}}},
+      //Add the average reviews field. If you are on a newer version of mongoDB, $addFields can be used. On the other hand, if your version of mongoDB is 3.2 or older, you have to use $project and then add the needed fields again
+      { $addFields: {
+        averageRating: {$avg: '$reviews.rating' }
+      }}, 
+      //Sort it by our new fields.
+      { $sort: {averageRating: -1}},
+      //Limit to 10
+      { $limit: 10}
+    ]);
+};
+
 //it finds reviews where the store's ID property is equal to the review's store property
 
 storeSchema.virtual('reviews', {
@@ -85,5 +102,13 @@ storeSchema.virtual('reviews', {
   localField: '_id', // which field on the store?
   foreignField: 'store' // which field on the review?
 });
+
+function autopopulate(next) {
+  this.populate('reviews');
+  next();
+};
+
+storeSchema.pre('find', autopopulate);
+storeSchema.pre('findOne', autopopulate);
 
 module.exports = mongoose.model('Store', storeSchema);
